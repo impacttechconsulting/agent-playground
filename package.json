@@ -1,0 +1,25 @@
+{
+  "name": "agent-playground-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for Critical River Industry page links",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ci": "playwright test --reporter=html,junit",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.2"
+  }
+}

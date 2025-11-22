@@ -1,0 +1,21 @@
+{
+  "testConfig": {
+    "baseUrl": "https://www.criticalriver.com",
+    "industryPageUrl": "/industry/",
+    "timeout": 60000,
+    "retries": 2
+  },
+  "expectedSections": [
+    "Healthcare",
+    "Financial Services",
+    "Manufacturing",
+    "Retail",
+    "Technology"
+  ],
+  "commonLinks": {
+    "home": "/",
+    "about": "/about/",
+    "contact": "/contact/",
+    "services": "/services/"
+  }
+}

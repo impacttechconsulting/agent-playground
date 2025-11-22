@@ -1,0 +1,98 @@
+name: Playwright E2E Tests - MCP
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run E2E Tests
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: Run Playwright tests
+      env:
+        PLAYWRIGHT_MCP_API_KEY: ${{ secrets.PLAYWRIGHT_MCP_API_KEY }}
+        PLAYWRIGHT_MCP_PROJECT: ${{ secrets.PLAYWRIGHT_MCP_PROJECT }}
+        PLAYWRIGHT_MCP_REGION: ${{ secrets.PLAYWRIGHT_MCP_REGION }}
+        CI: true
+      run: npm run test:e2e:ci
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: test-results/
+        retention-days: 30
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Upload test artifacts on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-artifacts-failure
+        path: |
+          test-results/
+          playwright-report/
+          screenshots/
+          videos/
+        retention-days: 30
+
+    - name: Comment PR with test results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          let comment = '## 🎭 Playwright E2E Test Results\n\n';
+          
+          try {
+            // Try to read JUnit results if available
+            const junitPath = 'test-results/junit.xml';
+            if (fs.existsSync(junitPath)) {
+              comment += '✅ Tests completed. Check the workflow artifacts for detailed reports.\n\n';
+            } else {
+              comment += '❌ Tests may have failed to run. Check the workflow logs.\n\n';
+            }
+          } catch (error) {
+            comment += '⚠️ Unable to parse test results.\n\n';
+          }
+          
+          comment += `- 📊 [View full Playwright report](${context.payload.repository.html_url}/actions/runs/${context.runId})\n`;
+          comment += `- 📦 Download artifacts from the workflow run\n`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

@@ -88,7 +88,8 @@ test.beforeEach(async ({ page }) => {
       const url = resolvedUrls[i];
       console.log(`[${i + 1}/${resolvedUrls.length}] Checking: ${url}`);
       
-      // Only attempt HTTP/HTTPS requests
+      // Only attempt HTTP/HTTPS requests. Skip non-HTTP protocols like:
+      // mailto:, tel:, javascript: (including typos like javascipt:), ftp:, file:, data:, etc.
       const lower = url.toLowerCase();
       if (!lower.startsWith('http://') && !lower.startsWith('https://')) {
         console.log(`  Skipping non-http(s) URL: ${url}`);
@@ -162,7 +163,8 @@ test.beforeEach(async ({ page }) => {
       const link = internalLinks[i];
       const resolvedUrl = await industryPage.resolveUrl(link.url);
       
-      // Only attempt HTTP/HTTPS links. Skip mailto:, tel:, javascript:, data:, etc.
+      // Only attempt HTTP/HTTPS requests. Skip non-HTTP protocols like:
+      // mailto:, tel:, javascript: (including typos like javascipt:), ftp:, file:, data:, etc.
       const lowerUrl = resolvedUrl.toLowerCase();
       if (!lowerUrl.startsWith('http://') && !lowerUrl.startsWith('https://')) {
         console.log(`  Skipping non-http(s) internal link: ${resolvedUrl}`);

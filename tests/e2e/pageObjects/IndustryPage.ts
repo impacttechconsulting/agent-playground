@@ -63,7 +63,21 @@ export class IndustryPage {
       
       if (href) {
         // Determine if link is external
-        const isExternal = href.startsWith('http') && !href.includes('criticalriver.com');
+        // For absolute URLs, properly parse and check the hostname
+        let isExternal = false;
+        try {
+          if (href.startsWith('http://') || href.startsWith('https://')) {
+            const url = new URL(href);
+            // Check if hostname is exactly criticalriver.com or a subdomain
+            isExternal = !(url.hostname === 'criticalriver.com' || 
+                          url.hostname === 'www.criticalriver.com' ||
+                          url.hostname.endsWith('.criticalriver.com'));
+          }
+          // Relative URLs are considered internal (not external)
+        } catch {
+          // If URL parsing fails, treat as external to be safe
+          isExternal = true;
+        }
         
         linkDetails.push({
           url: href,
@@ -132,16 +146,20 @@ export class IndustryPage {
 
   /**
    * Filter out non-navigable links (anchors, javascript, mailto, tel, etc.)
+   * Also filters out root URL to avoid re-testing the base page we're already on
    */
   filterNavigableLinks(urls: string[]): string[] {
     return urls.filter(url => {
-      // Remove anchor links, javascript, mailto, tel, etc.
+      // Remove potentially dangerous or non-navigable URL schemes
+      const lowerUrl = url.toLowerCase();
       return url && 
-             !url.startsWith('#') && 
-             !url.startsWith('javascript:') && 
-             !url.startsWith('mailto:') && 
-             !url.startsWith('tel:') &&
-             url !== '/' && // Skip root if already there
+             !lowerUrl.startsWith('#') && 
+             !lowerUrl.startsWith('javascript:') && 
+             !lowerUrl.startsWith('data:') && 
+             !lowerUrl.startsWith('vbscript:') && 
+             !lowerUrl.startsWith('mailto:') && 
+             !lowerUrl.startsWith('tel:') &&
+             url !== '/' && // Skip root to avoid re-testing base page
              url.trim() !== '';
     });
   }

@@ -109,11 +109,12 @@ test.describe('Industry Page - Link Validation', () => {
             error: `HTTP ${status}`,
           });
         }
-      } catch (error: any) {
-        console.log(`  ✗ Error: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log(`  ✗ Error: ${errorMessage}`);
         brokenLinks.push({
           url,
-          error: error.message,
+          error: errorMessage,
         });
       }
       
@@ -155,8 +156,10 @@ test.describe('Industry Page - Link Validation', () => {
       const link = internalLinks[i];
       const resolvedUrl = await industryPage.resolveUrl(link.url);
       
-      // Skip duplicates and non-navigable
-      if (resolvedUrl.includes('#') || resolvedUrl.startsWith('javascript:')) {
+      // Skip duplicates and non-navigable (including potentially dangerous schemes)
+      const lowerUrl = resolvedUrl.toLowerCase();
+      if (lowerUrl.includes('#') || lowerUrl.startsWith('javascript:') || 
+          lowerUrl.startsWith('data:') || lowerUrl.startsWith('vbscript:')) {
         continue;
       }
       
@@ -180,12 +183,13 @@ test.describe('Industry Page - Link Validation', () => {
         } else {
           console.log(`  ✓ Success (${status})`);
         }
-      } catch (error: any) {
-        console.log(`  ✗ Error: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log(`  ✗ Error: ${errorMessage}`);
         brokenLinks.push({
           url: resolvedUrl,
           text: link.text,
-          error: error.message,
+          error: errorMessage,
         });
       }
       
